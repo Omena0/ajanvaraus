@@ -1,0 +1,8 @@
+{
+  "dev": {
+    "run": "npm run dev:web"
+  },
+  "module-path": "./spacetimedb",
+  "database": "ajanvaraus",
+  "server": "local"
+}
