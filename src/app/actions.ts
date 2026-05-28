@@ -3,6 +3,7 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
+import { randomBytes } from 'node:crypto';
 import { hashPassword, issueSessionToken, toSessionUser, validatePassword, verifyPassword } from '@/lib/auth';
 import { getCurrentUser, getData, getInviteByCode, getPoolById, getSlotById, getUserById, id, nowIso } from '@/lib/store';
 import { withConnection } from '@/lib/spacetimedb';
@@ -18,6 +19,25 @@ function actionErrorMessage(error: unknown, fallback: string) {
 function formValue(formData: FormData, key: string) {
   const value = formData.get(key);
   return typeof value === 'string' ? value.trim() : '';
+}
+
+function generateInviteCode(existingCodes: Set<string>) {
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+
+  for (let attempt = 0; attempt < 20; attempt++) {
+    const bytes = randomBytes(8);
+    let code = '';
+
+    for (const byte of bytes) {
+      code += characters[byte % characters.length];
+    }
+
+    if (!existingCodes.has(code)) {
+      return code;
+    }
+  }
+
+  throw new Error('Failed to generate invite code');
 }
 
 async function setToast(message: string, type: ToastType = 'info') {
@@ -151,12 +171,32 @@ export async function signupClientAction(formData: FormData) {
 
 export async function createInviteAction(formData: FormData) {
   const { user } = await requireCurrentUser();
-  if (!user.admin) await redirectWithToast('/admin', 'Admin access required', 'error');
+  const canCreateInvite = user.admin || user.role === 'host';
+  if (!canCreateInvite) await redirectWithToast('/pools', 'Only hosts or admins can create invites', 'error');
 
   const type = formValue(formData, 'type') as 'user' | 'pool';
-  const code = formValue(formData, 'code').toUpperCase();
   const expiresAtDate = formValue(formData, 'expiresAt');
   const poolId = formValue(formData, 'poolId');
+  const returnTo = formValue(formData, 'returnTo') || '/pools';
+  const data = await getData();
+  const code = generateInviteCode(new Set(data.invites.map((invite) => invite.code)));
+
+  if (!expiresAtDate) {
+    await redirectWithToast('/pools', 'Expiration date is required', 'error');
+  }
+  if (type !== 'user' && type !== 'pool') {
+    await redirectWithToast('/pools', 'Invite type is invalid', 'error');
+  }
+
+  if (!user.admin) {
+    if (type !== 'pool') {
+      await redirectWithToast('/pools', 'Hosts can only create pool invites', 'error');
+    }
+    const pool = poolId ? getPoolById(data, poolId) : null;
+    if (!pool || pool.hostId !== user.id) {
+      await redirectWithToast('/pools', 'You can only create invites for your own pools', 'error');
+    }
+  }
 
   await withConnection((connection) =>
     connection.reducers.createInvite({
@@ -173,17 +213,31 @@ export async function createInviteAction(formData: FormData) {
 
   revalidatePath('/admin');
   revalidatePath('/admin/invites');
-  await setToast('Invite created', 'success');
+  revalidatePath('/pools');
+  await setToast(`Invite created: ${code}`, 'success');
+  redirect(`${returnTo}?created=${encodeURIComponent(code)}`);
 }
 
 export async function createPoolAction(formData: FormData) {
   const { user } = await requireCurrentUser();
-  if (!user.admin) await redirectWithToast('/admin', 'Admin access required', 'error');
+  const canCreatePool = user.admin || user.role === 'host';
+  if (!canCreatePool) await redirectWithToast('/pools', 'Only hosts or admins can create pools', 'error');
 
   const name = formValue(formData, 'name');
   const topic = formValue(formData, 'topic');
-  const hostId = formValue(formData, 'hostId');
+  const requestedHostId = formValue(formData, 'hostId');
   const timezone = formValue(formData, 'timezone') || 'UTC';
+  const data = await getData();
+  const hostId = user.admin ? (requestedHostId || user.id) : user.id;
+
+  if (!user.admin && requestedHostId && requestedHostId !== user.id) {
+    await redirectWithToast('/pools', 'Hosts can only create pools for themselves', 'error');
+  }
+
+  const host = getUserById(data, hostId);
+  if (!host || (!host.admin && host.role !== 'host')) {
+    await redirectWithToast('/pools', 'Selected host is invalid', 'error');
+  }
 
   await withConnection((connection) =>
     connection.reducers.createPool({
@@ -209,6 +263,7 @@ export async function createPoolAction(formData: FormData) {
 
   revalidatePath('/admin');
   revalidatePath('/admin/pools');
+  revalidatePath('/pools');
   await setToast('Pool created', 'success');
 }
 
@@ -399,6 +454,41 @@ export async function changePasswordAction(formData: FormData) {
   await setToast('Password changed', 'success');
 }
 
+export async function updateProfileAction(formData: FormData) {
+  const { user } = await requireCurrentUser();
+
+  const firstName = formValue(formData, 'firstName');
+  const lastName = formValue(formData, 'lastName');
+  const email = formValue(formData, 'email');
+  const phone = formValue(formData, 'phone');
+  const timezone = formValue(formData, 'timezone') || 'UTC';
+
+  if (!firstName || !lastName || !email) {
+    await redirectWithToast('/settings?error=profile', 'First name, last name, and email are required', 'error');
+  }
+
+  const data = await getData();
+  if (data.users.some((item) => item.id !== user.id && item.email.toLowerCase() === email.toLowerCase())) {
+    await redirectWithToast('/settings?error=profile', 'Email is already in use', 'error');
+  }
+
+  await withConnection((connection) =>
+    connection.reducers.updateProfile({
+      actor_user_id: user.id,
+      user_id: user.id,
+      first_name: firstName,
+      last_name: lastName,
+      email,
+      phone,
+      timezone,
+      updated_at: nowIso(),
+    })
+  );
+
+  revalidatePath('/settings');
+  await setToast('Profile updated', 'success');
+}
+
 export async function createUserAction(formData: FormData) {
   const { user } = await requireCurrentUser();
   if (!user.admin) await redirectWithToast('/admin', 'Admin access required', 'error');
@@ -407,18 +497,22 @@ export async function createUserAction(formData: FormData) {
   const email = formValue(formData, 'email');
   const firstName = formValue(formData, 'firstName');
   const lastName = formValue(formData, 'lastName');
+  const password = formValue(formData, 'password');
   const role = formValue(formData, 'role') as 'client' | 'host' | 'admin';
   const data = await getData();
 
-  if (!username || !email) await redirectWithToast('/admin?error=missing', 'Username and email are required', 'error');
+  if (!username || !email || !password) await redirectWithToast('/admin/users?error=missing', 'Username, email, and password are required', 'error');
+  if (!validatePassword(password)) {
+    await redirectWithToast('/admin/users?error=password', 'Password must be at least 6 characters with both letters and numbers', 'error');
+  }
   if (data.users.some((item) => item.username.toLowerCase() === username.toLowerCase())) {
-    await redirectWithToast('/admin?error=exists', 'Username already exists', 'error');
+    await redirectWithToast('/admin/users?error=exists', 'Username already exists', 'error');
   }
   if (data.users.some((item) => item.email.toLowerCase() === email.toLowerCase())) {
-    await redirectWithToast('/admin?error=exists', 'Email already exists', 'error');
+    await redirectWithToast('/admin/users?error=exists', 'Email already exists', 'error');
   }
 
-  const passwordHash = await hashPassword('temppass123');
+  const passwordHash = await hashPassword(password);
   await withConnection((connection) =>
     connection.reducers.createUser({
       actor_user_id: user.id,

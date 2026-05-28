@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { clsx } from 'clsx';
 import type { ReactNode } from 'react';
+import { logoutAction } from '@/app/actions';
 
 export function Shell({ children }: { children: ReactNode }) {
   return <div className="shell">{children}</div>;
@@ -45,11 +46,22 @@ export function Sidebar({
         <div className="strong">{user ? user.username : 'Guest'}</div>
         <div className="muted">{user ? `${user.role}${user.admin ? ' · admin' : ''}` : 'not logged in'}</div>
       </div>
+      {user ? (
+        <div className="sidebar-actions">
+          <form action={logoutAction}>
+            <button className="button secondary sidebar-button" type="submit">Sign out</button>
+          </form>
+        </div>
+      ) : null}
     </aside>
   );
 }
 
-export function Panel({ title, subtitle, children, id }: { title: string; subtitle?: string; children: ReactNode; id?: string }) {
+export function Notice({ children, tone = 'info' }: { children: ReactNode; tone?: 'info' | 'error' | 'success' }) {
+  return <div className={clsx('notice', `notice-${tone}`)} role={tone === 'error' ? 'alert' : 'status'}>{children}</div>;
+}
+
+export function Panel({ title, subtitle, children, id, action }: { title: string; subtitle?: string; children: ReactNode; id?: string; action?: ReactNode }) {
   return (
     <section className="panel" id={id}>
       <div className="panel-head">
@@ -57,6 +69,7 @@ export function Panel({ title, subtitle, children, id }: { title: string; subtit
           <h2>{title}</h2>
           {subtitle ? <p>{subtitle}</p> : null}
         </div>
+        {action ? <div className="panel-action">{action}</div> : null}
       </div>
       {children}
     </section>

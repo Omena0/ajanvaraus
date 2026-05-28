@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": ". \"$HOME/.cargo/env\" && rustup target add wasm32-unknown-unknown >/dev/null 2>&1 || true && spacetime start --non-interactive >/tmp/ajanvaraus-spacetime.log 2>&1 & spacetime_pid=$! && trap 'kill $spacetime_pid' EXIT && until ss -ltn 2>/dev/null | grep -q ':3000 '; do :; done && spacetime dev --yes ajanvaraus",
+    "dev": "node scripts/dev.mjs",
     "dev:web": "next dev --turbopack --port 3001",
     "build": "next build",
     "start": "next start",

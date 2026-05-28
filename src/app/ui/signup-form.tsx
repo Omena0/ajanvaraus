@@ -1,6 +1,5 @@
 'use client';
 
-import { useSearchParams } from 'next/navigation';
 import { useFormStatus } from 'react-dom';
 import { signupClientAction } from '@/app/actions';
 
@@ -9,9 +8,7 @@ function SubmitButton() {
   return <button className="button primary" type="submit" disabled={pending}>{pending ? 'Creating…' : 'Create client account'}</button>;
 }
 
-export function SignupForm() {
-  const searchParams = useSearchParams();
-  const inviteCode = (searchParams.get('invite') ?? searchParams.get('code') ?? '').trim();
+export function SignupForm({ inviteCode }: { inviteCode: string }) {
 
   return (
     <form action={signupClientAction} className="form-stack">
@@ -23,7 +20,18 @@ export function SignupForm() {
       <label>Email (optional)<input name="email" type="email" /></label>
       <label>Phone (optional)<input name="phone" /></label>
       <label>Timezone<input name="timezone" defaultValue="UTC" /></label>
-      <label>Password<input name="password" type="password" minLength={6} required /></label>
+      <label>
+        Password
+        <input
+          name="password"
+          type="password"
+          minLength={6}
+          pattern="^(?=.*[A-Za-z])(?=.*\d).{6,}$"
+          title="Password must be at least 6 characters with both letters and numbers"
+          required
+        />
+        <p className="muted" style={{ fontSize: '0.8rem', margin: '4px 0 0' }}>At least 6 characters with letters and numbers</p>
+      </label>
       <SubmitButton />
     </form>
   );

@@ -1,0 +1,14 @@
+D:\GitHub\ajanvaraus\spacetimedb\target\wasm32-unknown-unknown\release\deps\serde-ddb46b86ae2a537e.d: C:\Users\aarne\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\lib.rs C:\Users\aarne\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\integer128.rs C:\Users\aarne\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\mod.rs C:\Users\aarne\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\de.rs C:\Users\aarne\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\ser.rs D:\GitHub\ajanvaraus\spacetimedb\target\wasm32-unknown-unknown\release\build\serde-4a33e031e74f9f91\out/private.rs
+
+D:\GitHub\ajanvaraus\spacetimedb\target\wasm32-unknown-unknown\release\deps\libserde-ddb46b86ae2a537e.rlib: C:\Users\aarne\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\lib.rs C:\Users\aarne\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\integer128.rs C:\Users\aarne\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\mod.rs C:\Users\aarne\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\de.rs C:\Users\aarne\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\ser.rs D:\GitHub\ajanvaraus\spacetimedb\target\wasm32-unknown-unknown\release\build\serde-4a33e031e74f9f91\out/private.rs
+
+D:\GitHub\ajanvaraus\spacetimedb\target\wasm32-unknown-unknown\release\deps\libserde-ddb46b86ae2a537e.rmeta: C:\Users\aarne\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\lib.rs C:\Users\aarne\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\integer128.rs C:\Users\aarne\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\mod.rs C:\Users\aarne\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\de.rs C:\Users\aarne\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\ser.rs D:\GitHub\ajanvaraus\spacetimedb\target\wasm32-unknown-unknown\release\build\serde-4a33e031e74f9f91\out/private.rs
+
+C:\Users\aarne\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\lib.rs:
+C:\Users\aarne\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\integer128.rs:
+C:\Users\aarne\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\mod.rs:
+C:\Users\aarne\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\de.rs:
+C:\Users\aarne\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\ser.rs:
+D:\GitHub\ajanvaraus\spacetimedb\target\wasm32-unknown-unknown\release\build\serde-4a33e031e74f9f91\out/private.rs:
+
+# env-dep:OUT_DIR=D:\\GitHub\\ajanvaraus\\spacetimedb\\target\\wasm32-unknown-unknown\\release\\build\\serde-4a33e031e74f9f91\\out

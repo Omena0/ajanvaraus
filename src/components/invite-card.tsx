@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Card, Badge } from '@/components/ui';
+import { Badge } from '@/components/ui';
 import { ConfirmActionForm } from '@/components/confirm-action-form';
 import { deleteInviteAction } from '@/app/actions';
 import type { Invite } from '@/lib/types';
@@ -21,22 +21,27 @@ export function InviteCard({ invite }: { invite: Invite }) {
   };
 
   return (
-    <Card title={invite.code}>
-      <p className="muted">{invite.type} invite</p>
-      <Badge>{invite.revoked ? 'revoked' : 'active'}</Badge>
-      <p className="muted" style={{ fontSize: '0.8rem', marginTop: '8px' }}>
-        Expires: {new Date(invite.expiresAt).toLocaleDateString()}
-      </p>
-      <p className="muted" style={{ fontSize: '0.8rem' }}>
-        Used by: {invite.usedByUserIds.length}
-      </p>
-      <button className="button primary" type="button" onClick={handleCopy} style={{ marginTop: '12px', width: '100%' }}>
-        {copied ? 'Copied!' : 'Copy link'}
-      </button>
-      <ConfirmActionForm action={deleteInviteAction} confirmMessage={`Delete invite ${invite.code}? This cannot be undone.`}>
-        <input type="hidden" name="inviteId" value={invite.id} />
-        <button className="button danger" type="submit" style={{ width: '100%' }}>Delete invite</button>
-      </ConfirmActionForm>
-    </Card>
+    <div className="invite-list-item">
+      <div className="invite-list-main">
+        <div>
+          <h3>{invite.code}</h3>
+          <p className="muted">{invite.type} invite</p>
+          <p className="muted">Expires: {new Date(invite.expiresAt).toLocaleDateString()}</p>
+          <p className="muted">Used by: {invite.usedByUserIds.length}</p>
+        </div>
+        <div className="invite-list-badges">
+          <Badge>{invite.revoked ? 'revoked' : 'active'}</Badge>
+        </div>
+      </div>
+      <div className="invite-list-actions">
+        <button className="button primary" type="button" onClick={handleCopy}>
+          {copied ? 'Copied!' : 'Copy link'}
+        </button>
+        <ConfirmActionForm action={deleteInviteAction} confirmMessage={`Delete invite ${invite.code}? This cannot be undone.`}>
+          <input type="hidden" name="inviteId" value={invite.id} />
+          <button className="button danger" type="submit">Delete invite</button>
+        </ConfirmActionForm>
+      </div>
+    </div>
   );
 }

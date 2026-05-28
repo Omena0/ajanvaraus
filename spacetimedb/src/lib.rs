@@ -350,8 +350,36 @@ pub fn create_invite(
     created_at: String,
     updated_at: String,
 ) -> Result<(), String> {
-    if !is_admin(ctx, &actor_user_id) {
-        return Err("Admin required".to_string());
+    let actor = ctx
+        .db
+        .user()
+        .id()
+        .find(&actor_user_id)
+        .ok_or_else(|| "Actor not found".to_string())?;
+
+    if !actor.admin && actor.role != "host" {
+        return Err("Host or admin required".to_string());
+    }
+
+    if !actor.admin {
+        if invite_type != "pool" {
+            return Err("Hosts can only create pool invites".to_string());
+        }
+        let invite_pool_id = pool_id.clone().ok_or_else(|| "Pool invite requires pool_id".to_string())?;
+        let pool = ctx
+            .db
+            .pool()
+            .id()
+            .find(&invite_pool_id)
+            .ok_or_else(|| "Pool not found".to_string())?;
+        if pool.host_id != actor.id {
+            return Err("Hosts can only create invites for their own pools".to_string());
+        }
+    } else if invite_type == "pool" {
+        let invite_pool_id = pool_id.clone().ok_or_else(|| "Pool invite requires pool_id".to_string())?;
+        if ctx.db.pool().id().find(&invite_pool_id).is_none() {
+            return Err("Pool not found".to_string());
+        }
     }
     if ctx.db.invite().iter().any(|invite| invite.code == code) {
         return Err("Invite already exists".to_string());
@@ -405,11 +433,35 @@ pub fn create_pool(
     created_at: String,
     updated_at: String,
 ) -> Result<(), String> {
-    if !is_admin(ctx, &actor_user_id) {
-        return Err("Admin required".to_string());
+    let actor = ctx
+        .db
+        .user()
+        .id()
+        .find(&actor_user_id)
+        .ok_or_else(|| "Actor not found".to_string())?;
+    if !actor.admin && actor.role != "host" {
+        return Err("Host or admin required".to_string());
     }
-    if ctx.db.user().id().find(&host_id).is_none() {
-        return Err("Host not found".to_string());
+
+    if !actor.admin && host_id != actor.id {
+        return Err("Hosts can only create pools for themselves".to_string());
+    }
+
+    let host = ctx
+        .db
+        .user()
+        .id()
+        .find(&host_id)
+        .ok_or_else(|| "Host not found".to_string())?;
+    if !host.admin && host.role != "host" {
+        return Err("Selected host must be a host or admin".to_string());
+    }
+
+    if ctx.db.pool().id().find(&id).is_some() {
+        return Err("Pool already exists".to_string());
+    }
+    if name.trim().is_empty() || topic.trim().is_empty() {
+        return Err("Name and topic are required".to_string());
     }
 
     ctx.db.pool().insert(Pool {
@@ -691,6 +743,60 @@ pub fn change_password(
         "user".to_string(),
         user_id,
         "Password changed".to_string(),
+        updated_at,
+    );
+
+    Ok(())
+}
+
+#[spacetimedb::reducer]
+pub fn update_profile(
+    ctx: &ReducerContext,
+    actor_user_id: String,
+    user_id: String,
+    first_name: String,
+    last_name: String,
+    email: String,
+    phone: String,
+    timezone: String,
+    updated_at: String,
+) -> Result<(), String> {
+    if actor_user_id != user_id && !is_admin(ctx, &actor_user_id) {
+        return Err("Not allowed".to_string());
+    }
+
+    let mut user = ctx
+        .db
+        .user()
+        .id()
+        .find(&user_id)
+        .ok_or_else(|| "User not found".to_string())?;
+
+    if ctx
+        .db
+        .user()
+        .iter()
+        .any(|item| item.id != user_id && item.email.eq_ignore_ascii_case(&email))
+    {
+        return Err("Email already exists".to_string());
+    }
+
+    user.first_name = first_name;
+    user.last_name = last_name;
+    user.email = email;
+    user.phone = phone;
+    user.timezone = timezone;
+    user.updated_at = updated_at.clone();
+    ctx.db.user().id().update(user);
+
+    push_audit(
+        ctx,
+        format!("audit-{}-{}", user_id, updated_at.clone()),
+        Some(actor_user_id),
+        "profile_update".to_string(),
+        "user".to_string(),
+        user_id,
+        "Profile updated".to_string(),
         updated_at,
     );
 

@@ -1,4 +1,5 @@
 import { Badge, Card, Panel } from '@/components/ui';
+import { ActionModal } from '@/components/action-modal';
 import { ConfirmActionForm } from '@/components/confirm-action-form';
 import { requireAdminData } from '../_lib';
 import { createPoolAction, deletePoolAction, deleteSlotAction } from '@/app/actions';
@@ -8,16 +9,25 @@ export default async function AdminPoolsPage() {
 
   return (
     <div className="page-grid">
-      <Panel title="Pools" subtitle="Create and manage all pools.">
-        <form action={createPoolAction} className="form-grid">
-          <input name="name" placeholder="Pool name" required />
-          <input name="topic" placeholder="Topic" required />
-          <select name="hostId" defaultValue={data.users.find((user) => user.role === 'host')?.id ?? ''}>
-            {data.users.filter((user) => user.role === 'host' || user.admin).map((user) => <option key={user.id} value={user.id}>{user.username}</option>)}
-          </select>
-          <input name="timezone" defaultValue="UTC" />
-          <button className="button primary" type="submit">Create pool</button>
-        </form>
+      <Panel
+        title="Pools"
+        subtitle="Create and manage all pools."
+        action={
+          <ActionModal triggerLabel="Create pool" title="Create pool" description="Add a new pool and assign its host.">
+            <form action={createPoolAction} className="modal-form">
+              <input name="name" placeholder="Pool name" required />
+              <input name="topic" placeholder="Topic" required />
+              <select name="hostId" defaultValue={data.users.find((user) => user.role === 'host')?.id ?? ''}>
+                {data.users.filter((user) => user.role === 'host' || user.admin).map((user) => <option key={user.id} value={user.id}>{user.username}</option>)}
+              </select>
+              <input name="timezone" defaultValue="UTC" />
+              <div className="modal-actions">
+                <button className="button primary" type="submit">Create pool</button>
+              </div>
+            </form>
+          </ActionModal>
+        }
+      >
         <div className="grid cards-2">
           {data.pools.map((pool) => (
             <Card key={pool.id} title={pool.name}>

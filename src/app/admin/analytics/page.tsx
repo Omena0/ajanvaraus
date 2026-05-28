@@ -10,12 +10,13 @@ function formatPercent(value: number, total: number) {
 
 function PieChart({ title, subtitle, segments }: { title: string; subtitle: string; segments: PieSegment[] }) {
   const total = segments.reduce((sum, segment) => sum + segment.value, 0);
+  const safeTotal = Math.max(total, 1);
   let accumulated = 0;
 
   const circles = segments.map((segment) => {
-    const start = accumulated / total;
+    const start = accumulated / safeTotal;
     accumulated += segment.value;
-    const end = accumulated / total;
+    const end = accumulated / safeTotal;
     const dash = Math.max(0, (end - start) * 100);
     const offset = 100 - start * 100;
     return (

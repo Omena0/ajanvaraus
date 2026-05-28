@@ -215,6 +215,16 @@ const reducersSchema = __reducers([
     password_hash: __t.string(),
     updated_at: __t.string(),
   }),
+  __reducerSchema('update_profile', {
+    actor_user_id: __t.string(),
+    user_id: __t.string(),
+    first_name: __t.string(),
+    last_name: __t.string(),
+    email: __t.string(),
+    phone: __t.string(),
+    timezone: __t.string(),
+    updated_at: __t.string(),
+  }),
   __reducerSchema('delete_user', {
     actor_user_id: __t.string(),
     target_user_id: __t.string(),

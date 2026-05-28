@@ -73,10 +73,29 @@ function getStatusColor(status: string) {
 export function Timeline({ slots, pools, onSlotClick }: { slots: Slot[]; pools: Pool[]; onSlotClick: (slot: Slot) => void }) {
   const [offset, setOffset] = useState(0);
   const rows = getTimelineRows(new Date(), 'forward', offset);
+  const timeTicks = [0, 6, 12, 18, 24];
 
   return (
     <div className="timeline-container">
       <div className="timeline-rows">
+        <div className="timeline-axis-row">
+          <div />
+          <div className="timeline-axis">
+            {timeTicks.map((hour) => {
+              const left = (hour / 24) * 100;
+              const transform = hour === 0 ? 'translateX(0)' : hour === 24 ? 'translateX(-100%)' : 'translateX(-50%)';
+              return (
+                <span
+                  key={hour}
+                  className="timeline-axis-tick"
+                  style={{ left: `${left}%`, transform }}
+                >
+                  {String(hour).padStart(2, '0')}:00
+                </span>
+              );
+            })}
+          </div>
+        </div>
         {rows.map((row) => (
           <div key={row.id} className="timeline-row">
             <div className="timeline-label">{row.label}</div>
